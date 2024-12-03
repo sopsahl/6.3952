@@ -1,0 +1,313 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage[authoryear]{natbib}
+\usepackage{mdframed}
+\usepackage{mdframed}
+\usepackage[margin=1in]{geometry}
+
+\title{\textbf{Simon Opsahl}\\AI, Decision Making, and Society\\6.3950/6.3952, Fall 2024\\Pset 4 -- `Pluralistic' Alignment}
+
+\begin{document}
+\date{Due: October 9, 2024 (by 11:59 PM)}
+
+\maketitle
+
+
+Advanced AI systems are increasing in their ability to automate consequential tasks and decisions. 
+However, not all humans agree about what kinds of individual decisions AI systems should make and, more broadly, what the role of AI in society should be.
+So who decides what the AI systems should do?
+The challenge of making AI systems balance conflicting interests in a normatively accepted way is sometimes known as the \emph{pluralistic} alignment problem.
+This problem set will explore the challenges posed by different humans holding conflicting views and the difficulty of designing ``pluralistically aligned'' AI systems. 
+
+Please submit your assignment as a PDF compiled from this LaTeX template.
+
+
+
+
+
+\newpage
+
+\section*{Problem 1: Exploring human ethical preference data}
+
+\textbf{Problem:}
+
+\textbf{Recommended background reading:}
+\begin{itemize}
+    \item Towards Measuring the Representation of Subjective Global Opinions in Language Models \citep{durmus2023towards}
+\end{itemize}
+
+Download the python notebook \texttt{aidms\_fall2024\_pluralistic\_alignment.ipynb} and the data \texttt{global\_opinion\_data.csv}. Open the notebook (we recommend in Google Colab) and update the \texttt{PROJECT\_FOLDER} variable to give the path name to where you have saved the data in Google Drive. You will use this Python notebook for this problem. 
+
+The notebook will load a \href{https://pandas.pydata.org/docs/user_guide/index.html}{pandas data frame} named  \texttt{global\_opinion\_data}. 
+This data was adapted for this assignment from the dataset \href{https://huggingface.co/datasets/Anthropic/llm_global_opinions}{\texttt{Anthropic/llm\_global\_opinions}} which compiles a set of survey questions and responses from different people across the world. 
+There are 14 rows, each labeled as a country name, and 180 columns, each labeled as a survey question. 
+Each question has two or more multiple-choice answers which reflect a range of preferences.
+Each numerical value in the dataset is a number from 0 to 1 which reflects the mean response along the multiple choice scale from the respondents in a country. For example, a value very close to zero means that respondents usually answered with option \texttt{A} while a value close to one means that they usually responded with the last multiple-choice option (e.g. \texttt{D} for a 4-option question).
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item (15 pts) Do some exploratory data analysis. What are three distinct, quantitative fun facts about the dataset that a social scientist would find interesting? Please explain and interpret each fun fact. Write a few sentences about each. 
+
+    \bigskip
+
+    \begin{mdframed}
+        I identfied some fun phenomena about the data. The average standard deviation by question was 0.14, meaning that respondant percentages by country tend to differ 
+        by 14 percent in the middle $68^{th}$ percentile. The country with the higehst often variation from column mean was Pakistan. The lowest variation was Mexico.
+        These values might be interesting to look at after running some clustering tests. I would expect Mexico to be pretty central and Pakistan to be apart from the rest of the chosen countries on the chosen axes.
+    \end{mdframed}
+
+    \item (5 pts) Identify a question in the dataset that seemed relatively ``controversial''. What was the question? What method did you use to identify it as ``controversial''? 
+
+    \bigskip
+
+    \begin{mdframed}
+        I identified the most controversial question as the one that had the highest standard deviation in the response by country.
+        The question was 
+        
+        Do you personally believe that sex between unmarried adults is morally acceptable, morally unacceptable, or is it not a moral issue? 
+        \begin{enumerate}
+            \item Morally acceptable
+            \item Not a moral issue
+            \item Depends on the situation (VOL)
+            \item Morally unacceptable
+        \end{enumerate}
+    \end{mdframed}
+
+    \item (5 pts) Describe, calculate, and present a value to quantify how much total disagreement exists between all of the countries in the data (no need to paste in code here -- just the value you calculate). Why do you think this value is a decent one to quantify ``disagreement''? What is an objection someone might raise about it? Please write a total of about 4-5 sentences. 
+
+    \bigskip
+
+    \begin{mdframed}
+        I took the average of the standard deviation of each column to be a metric of overall disagreement. 
+        The value ended up being $0.14$, which means that on average (by question), 68\% of responses by country were within 0.14 of the average response. This is a valid metric to 
+        quantify disagreement because it tracks the variation in each question and calculates a score agnostic to the number of questions. 
+        Someone might find fault with the lack of interpretibility of a value that doesn't truly relate to the task (multiple choice questions).
+    \end{mdframed}
+    
+    \item (10 pts) The assignment for the notebook will run \href{https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding}{t-SNE} dimensionality reduction and \href{https://en.wikipedia.org/wiki/K-means_clustering}{k-means} clustering for you and visualize the results. Both are unsupervised learning techniques that are helpful for identifying clusters of similar datapoints. t-SNE represents high-dimensional data in a low-dimensional space in a way designed to respect the local structure among different points. K-means finds a set of clusters that describe what groups the different points seem to fall into. 
+
+    Analyze the outputs. From the t-SNE results, what can you infer about similarities and differences between countries from the results based on which countries seem to group together? From the k-means results, how would you label and characterize each of the four clusters? 
+
+    \bigskip
+
+    \begin{mdframed}
+        
+            It seems that countries on the t-SNE results seemed to be grouped together based on level of development in one axis and adoption of western ideals in another. There did not appear to be 
+            any obvious labels for the axis representations, but countries at a similar level of development and with similar ideals 
+            were placed in similar parts of the graph. For the four clusters from k-means, I would label them as Western Ideals (Brazil, Mexico, France, Germany, USA, Japan), Eastern Ideals (Jordan, Turkey, Russia, Lebanon), 
+            Developing (India, Indonesia, Nigeria), and Pakistan (Pakistan).
+
+    \end{mdframed}
+
+    \item (15 pts required for grad students, 5 pts extra credit for undergrad students) Implement and run \href{https://en.wikipedia.org/wiki/Principal_component_analysis}{principal component analysis} on the data (you can use any libraries/packages you want such as \href{https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html}{sklearn}).
+    
+    First, what does PCA tell you about the intrinsic dimensionality of the data? Justify your answer quantitatively and/or with a figure. If you include a figure, it might look like \href{https://en.wikipedia.org/wiki/Scree_plot}{this}.
+    
+    Second, interpret the 1st principal component (it will be a length-180 vector). Back up your answer in terms of countries and questions. In other words, you will want to analyze the 1st principal component both (1) based on how the different countries vary along it and (2) in terms of a few of the questions that the principal component has very low or high coordinate values for. 
+
+    \bigskip
+
+    \begin{mdframed}
+        PCA tells you that some features of the data are more important than others. Thus, the same trends/behavior can be exhibited and emphasized by focusing only on the most important features of the data. A scree plot is included below to emphasize this point. 
+
+
+        The 1st principal component, in short, is related to the average answer by question. Because response varies more realistically by question than by country, the highest component represents the general inertia of the responses.
+        Lower importance components are responsible for the country-specific variation by question.
+
+    \end{mdframed}
+
+    \includegraphics[width=10cm, height=8cm]{scree.png}
+
+    \item (5 pts) Paste a link to your Google Colab notebook with the code for this problem. Make sure that sharing settings are set so that ``anyone with the link can view''.    
+
+    \bigskip
+
+    \begin{mdframed}
+        \url{https://drive.google.com/file/d/1Z9aEe-WTBePVZpJJz00iXC_Rm_ULsXx1/view?usp=sharing}
+    \end{mdframed}
+    
+\end{enumerate}
+
+
+
+
+    
+
+
+
+
+
+\newpage
+
+\section*{Problem 2: The ``pluralistic alignment'' problem}
+
+\textbf{Background reading:}
+\begin{itemize}
+    \item Whose Opinions Do Language Models Reflect? \citep{santurkar2023whose}
+    \item The Values Encoded in Machine Learning Research \citep{birhane2022values}
+    \item Hard Choices in Artificial Intelligence \citep{dobbe2021hard}
+    \item A Roadmap to Pluralistic Alignment \citep{sorensen2024roadmap}
+    \item Participation is not a Design Fix for Machine Learning \citep{sloane2022participation}
+    \item Don’t ask if artificial intelligence is good or fair, ask how it shifts power \citep{kalluri2020don}
+\end{itemize}
+
+\textbf{Problem:}
+
+\begin{enumerate}[label=(\alph*)]
+
+    \item (15 pts) Briefly describe the ``pluralistic alignment'' problem. In what senses can we make progress on it? In what senses does it NOT have a solution? Please discuss points from at least three of the above background readings in your answer. 
+
+    \bigskip
+    
+    \begin{mdframed}
+        The pluralistic alignment problem relates to the morals that a model adopts. Do these morals reflect the population average? Do they reflect distributions? Or, do they reflect ``steerable'' values specific
+        to a group of people? This last option seems ideal for personalized chatbots, but some find the potential echo chamber to be concerning. We can make progress on 
+        this problem by thoroughly investigating the biases implicit in the models through thorough audits and human evaluation at every point of the decision-making process.
+    \end{mdframed}
+    
+    \item (20 pts) Describe 4 different high-level approaches that an AI system developer could use to address/avoid the challenges posed by human ethical disagreement about what AI systems should do. Mention at least one pro and con for each. You can optionally cite papers (including the ones above) if you wish.
+
+    \bigskip
+
+    \begin{mdframed}
+        A developer can address ethical concerns by making a full audit of the model and its biases across a number of attributes. This way, others can be informed on how to treat with the model and use it fairly. There are concerns, however, that such investigations are a 
+        waste of resources that should be devoted to developing new tools instead. 
+
+        They could also avoid disagreement by not allowing the model to be used for potentially polarizing tasks (i.e. not responding to polarizing prompts). This prevents any morals from being demonstrated, but it also heavily restricts the use of models.
+
+        They could also choose a particular approach and go with it. This would only require documentation, but it may lead to controversy from those opposed to the adopted method.
+
+        Finally, they could provide multiple responses that account for all major thoughts on a subject. This successfully shows all major sides to an argument, but their are also concerns about impartial pedagogy inciting more radical thinking. 
+    \end{mdframed}
+
+    \item (15 pts) Pick one of your solutions from part (b). Design a prompt for GPT-4o instructing it to respond to ethical dilemmas according to your solution. Use GPT-4o at \href{https://chatgpt.com/}{https://chatgpt.com/} (make a free account if necessary).
+    
+    First, paste in the prompt as part of your answer. 
+    
+    Second, submit a link to a chat transcript with an example of the model arguably responding as intended in one case (there is a button to create one in the top right of the ChatGPT interface). Briefly explain. 
+        
+    Third, submit a link to a chat transcript with an example of the model arguably failing to respond as intended. Briefly explain.
+
+    Here is an example of making a LaTeX link to a GPT-4o chat: \href{https://chatgpt.com/share/66e3bdbc-2bd4-8011-97a5-317647917e75}{link}
+
+    \bigskip
+
+    \begin{mdframed}
+        Prompt: In the following question, give me all major sides of the argument, even bad ones.
+
+        Successful Case: \url{https://chatgpt.com/share/670750e8-65bc-8007-8482-1a6271f90395}
+        
+        I asked about healthcare, and it gave nuanced takes.
+
+        Failed Case: \url{https://chatgpt.com/share/67075076-c948-8007-b4d1-a74366e7de17}
+
+        I asked about racism, and it included potentially dangerous rhetoric.
+
+    \end{mdframed}
+
+    % \item (4 pts) Discuss at least two limitations or concerns with your solution.
+
+    % \bigskip
+
+    % \begin{mdframed}
+    %     \textcolor{blue}{Rubric}
+    %     \begin{itemize}
+    %         \item 4 pts (2 each) for a non-BS explanation of at least two limitations.
+    %     \end{itemize}
+    %     \textcolor{blue}{Cas's Example}
+
+    %     One limitation is that it's not always clear what a majority of people think. Some issues are kind of close. For example, we aren't 100\% sure if a majority of Americans prefer Harris or Trump.  
+        
+    %     Another limitation/concern is that this suffers from all of the problems that democracies suffer from -- e.g. majoritarian not being the same as utilitarian or ambiguity in how to handle issues with more than 2 options. 
+        
+    % \end{mdframed}
+        
+\end{enumerate}
+
+
+
+
+
+
+
+
+\newpage
+
+\section*{Problem 3: The challenges of steering LLMs}
+
+
+\textbf{Recommended Background reading:}
+\begin{itemize}
+    \item Evaluating Large Language Model Biases in Persona-Steered Generation  \citep{liu2024evaluating}
+    \item Cultural Bias and Cultural Alignment of Large Language Models \citep{tao2024cultural}
+\end{itemize}
+
+
+\textbf{Problem:}
+
+\begin{enumerate}[label=(\alph*)]
+    
+    \item (15 pts) One strategy for ``pluralistic alignment'' is to make systems that can adapt to the preferences of specific users or groups of users \citep{sorensen2024roadmap}. This approach reflects ongoing real-world research on adapting AI systems to align with diverse cultural and ethical values across different regions \citep{tao2024cultural}.
+
+    Design 3 instruction prompts for GPT-4o in order to make it answer ethical/political questions similarly to the mean survey respondents for 3 held-out countries: the \textbf{UK}, \textbf{Kenya}, and \textbf{China}. 
+    
+    Later, the course staff will use all of your prompts to have GPT-4o answer the questions from the global opinion dataset used in Problem 1. We will use the following template: 
+    
+    \texttt{You are being used for social science research. You will be given a series of multiple choice questions and asked to respond according to the following instruction:\\ \{WE\_WILL\_INSERT\_YOUR\_PROMPT\_HERE\} Please respond with nothing but the letter of the answer. For example, if your answer is Z, just respond with "Z." and nothing else.} 
+    
+    In a few lectures from now, the course staff will present an exploratory data analysis on your prompts and results, assess the degree of disagreement across your prompted models, and discuss what these results suggest about the difficulty of designing AI systems to adhere to different human values. 
+    
+    Paste your three prompts here (without the above template), one each for the \textbf{UK}, \textbf{Kenya}, and \textbf{China} (it is ok if the three prompts have a similar form). Explain your process and rationale for designing them in at lest 3-5 sentences.
+
+    \bigskip
+
+    \begin{mdframed}
+        UK: Answer as if you were a normal, average citizen of the UK.
+
+        Kenya: Answer as if you were a normal, average citizen of Kenya.
+
+        China: Answer as if you were a normal, average citizen of China.
+
+        I chose a short prompt identical in form as to limit the amount of confounding when comparing the responses by country.
+        To get the mean survey data, I am wondering if the model correlates that average respondant. That would be a good way to study 
+        how the model connects average response with average respondant.
+
+    \end{mdframed}
+
+    \item (1 pt) Submit your three prompts via \href{https://forms.gle/t2Vy9Ch1JM5bNoch8}{this Google form}. Submit the form and simple respond ``Done.'' to this question. 
+
+    \bigskip
+
+    \begin{mdframed}
+        Done.
+    \end{mdframed}
+        
+\end{enumerate}
+
+
+
+
+
+
+
+\newpage
+
+\section*{[Optional] Any interesting thoughts or findings?}
+
+This question will not be graded. However, the course staff is interested in your thoughts. Did you find anything particularly interesting while doing this assignment? Did any of your background knowledge or experiences help you complete it? How did you find things overall? Feel free to share any thoughts here. We will consider sparingly giving extra credit for extremely insightful responses to this question.
+
+\bigskip
+
+\begin{mdframed}
+        YOUR ANSWER HERE
+\end{mdframed}
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{bibliography}
+
+\end{document}
